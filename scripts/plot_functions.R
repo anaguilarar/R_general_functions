@@ -44,8 +44,8 @@ theme_Publication <- function(base_size=14, base_family="helvetica", xangle = 0,
 
 
 grafica_Numerica = function(eventos , x_variable , y_variable,
-                            name_x_axes="",name_y_axes ="", colorby = NA, xangle = 0, xhjust = 0.5, linear = T){
-    ## asignar el nombre de los labels
+         name_x_axes="",name_y_axes ="", colorby = NA, xangle = 0, xhjust = 0.5, linear = T){
+  ## asignar el nombre de los labels
   if (name_x_axes == "")
     name_x_axes = x_variable
   if (name_y_axes == "")
@@ -55,19 +55,22 @@ grafica_Numerica = function(eventos , x_variable , y_variable,
       geom_smooth(se = FALSE)+
       labs(y = name_y_axes , x = name_x_axes)+theme_Publication()
   }else if(linear){
-    ggplot(eventos, aes(eventos[,x_variable],eventos[,y_variable]))+
+    ms = caret::R2(obs = eventos[,y_variable], pred = eventos[,x_variable])
+
+    grap = ggplot(eventos, aes(eventos[,x_variable],eventos[,y_variable]))+
       geom_point()+
       geom_smooth(se = FALSE, method = "lm") + 
-      labs(title = paste0("R square: ",round(ms$r.squared, 2)),
+      labs(title = paste0("R square: ",round(ms, 2)),
            y = name_y_axes , 
            x = name_x_axes)+
       theme_Publication()
     
   }else{
-    ggplot(eventos, aes(eventos[,x_variable],eventos[,y_variable]))+geom_point()+
+    grap = ggplot(eventos, aes(eventos[,x_variable],eventos[,y_variable]))+geom_point()+
       geom_smooth(se = FALSE)+
       labs(y = name_y_axes , x = name_x_axes)+theme_Publication()
   }
+  return(grap)
   
 }
 

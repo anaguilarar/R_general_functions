@@ -77,24 +77,43 @@ grafica_Numerica = function(eventos , x_variable , y_variable,
 grafica_Categorica = function(eventos , x_variable , y_variable,
                               name_x_axes="",name_y_axes ="" , kruskal = T, xangle = 90, xhjust = 0){
   
-  
-  if(length(levels(factor(eventos[,x_variable])))>1 & kruskal){
+  labels_diff_=NULL
+  if(length(levels(factor(as.character(eventos[,x_variable]))))>1 & kruskal){
+    
+    if (length(levels(factor(as.character(eventos[,x_variable]))))==2){
+      
+      map_signif_level <- c("****"=0.0001, "***"=0.001, "**"=0.01,  "*"=0.05,"ns" = 1)
+      m = wilcox.test(eventos[,y_variable]~factor(as.character(eventos[,x_variable])))
+      
+      labalhyp = "****"
+      
+      test = m$p.value
+      for(i in 2:length(map_signif_level))
+        if(test>map_signif_level[i-1])
+          labalhyp = names(map_signif_level)[i]
+      
+      labels_diff_ = data.frame(cluster = levels(factor(as.character(eventos[,x_variable])))[1] ,
+                                label = paste0("p = ",signif(test,digits = 5),"\n",labalhyp))
+      
+      
+    }else{
+      eventos = eventos[!is.na(eventos[,x_variable]),]
+      
+      PT = pairwise.wilcox.test(eventos[,y_variable] , factor(as.character(eventos[,x_variable]))  , p.adjust.method = "BH")
+      
+      
+      PT1 = fullPTable(PT$p.value)
+      labels_diff = multcompLetters(PT1,
+                                    compare="<",
+                                    threshold=0.05,
+                                    Letters=letters,
+                                    reversed = FALSE)
+      
+      labels_diff_ = data.frame(cluster = names(labels_diff$monospacedLetters) ,
+                                label = as.character(labels_diff$monospacedLetters))
+      print(labels_diff_)
+    }
 
-    eventos = eventos[!is.na(eventos[,x_variable]),]
-    
-    PT = pairwise.wilcox.test(eventos[,y_variable] , factor(eventos[,x_variable])  , p.adjust.method = "BH")
-    
-    
-    PT1 = fullPTable(PT$p.value)
-    labels_diff = multcompLetters(PT1,
-                                  compare="<",
-                                  threshold=0.05,
-                                  Letters=letters,
-                                  reversed = FALSE)
-    
-    labels_diff_ = data.frame(cluster = names(labels_diff$monospacedLetters) ,
-                              label = as.character(labels_diff$monospacedLetters))
-    print(labels_diff_)
     
   }else{
     labels_diff = list(Letters = 1)
@@ -103,7 +122,8 @@ grafica_Categorica = function(eventos , x_variable , y_variable,
   
   ## calcular el valor m?ximo de los datos para colocar la letra
   maxs = eventos %>% group_by(eval(parse(text = x_variable))) %>% 
-    summarize(maxs = max(eval(parse(text = y_variable)), na.rm = T))
+    summarize(maxs = max(eval(parse(text = y_variable)), na.rm = T),
+              sdval = sd(eval(parse(text = y_variable)), na.rm = T))
   
   
   graph = ggplot(eventos, aes(eventos[,x_variable],eventos[,y_variable]))+geom_boxplot()
@@ -115,18 +135,26 @@ grafica_Categorica = function(eventos , x_variable , y_variable,
       name_x_axes = x_variable
     }
     if (name_y_axes == ""){
-    name_y_axes = y_variable
+      name_y_axes = y_variable
     }
   }
   graph = graph + labs(y = name_y_axes , x = name_x_axes)+
     scale_x_discrete(labels=xlabs)+theme_Publication(xangle = 0, xhjust = 0.5)
-  if(length(unique(as.character(labels_diff$Letters)))>1){
+  if(length(unique(as.character(labels_diff_$label)))>1){
+    
     graph = graph + geom_text(data=data.frame(),
                               aes(label = labels_diff_$label ,
-                                  x = labels_diff_$cluster,y=(maxs$maxs+.2)), hjust=0.5)
+                                  x = labels_diff_$cluster,y=(maxs$maxs+0.5*maxs$sdval)), hjust=0.5)
+  }else if(length(unique(as.character(labels_diff_$label))) == 1){
+    
+    graph = graph + geom_text(data=data.frame(),
+                              aes(label = labels_diff_$label ,
+                                  x = labels_diff_$cluster,
+                                  y=(maxs[maxs[,1][[1]]%in%labels_diff_$cluster,]$maxs + 0.5*maxs[maxs[,1][[1]]%in%labels_diff_$cluster,]$sdval)), hjust=0.5)
   }
   return(graph)
 }
+
 
 
 grafica_rendimiento = function(eventos, y_variable,name_y_axes){

@@ -75,8 +75,11 @@ grafica_Numerica = function(eventos , x_variable , y_variable,
 }
 
 
+
 grafica_Categorica = function(eventos , x_variable , y_variable,
                    name_x_axes="",name_y_axes ="" , kruskal = T, xangle = 90, xhjust = 0){
+  
+  labels_diff_ = NULL
   
   if(length(levels(factor(as.character(eventos[,x_variable]))))>1 & kruskal){
     
@@ -114,14 +117,11 @@ grafica_Categorica = function(eventos , x_variable , y_variable,
                                   label = as.character(labels_diff$monospacedLetters))
         print(labels_diff_)
       }else{
-        labels_diff = list(Letters = 1)
+        labels_diff_ = NULL
       }
       
     }
     
-    
-  }else{
-    labels_diff = list(Letters = 1)
   }
   xlabs <- paste(levels(factor(eventos[,x_variable])),"\n(N=",table(factor(eventos[,x_variable])),")",sep="")
   
@@ -145,18 +145,21 @@ grafica_Categorica = function(eventos , x_variable , y_variable,
   }
   graph = graph + labs(y = name_y_axes , x = name_x_axes)+
     scale_x_discrete(labels=xlabs)+theme_Publication(xangle = 0, xhjust = 0.5)
-  if(length(unique(as.character(labels_diff_$label)))>1){
-    
-    graph = graph + geom_text(data=data.frame(),
-                              aes(label = labels_diff_$label ,
-                                  x = labels_diff_$cluster,y=(maxs$maxs+0.5*maxs$sdval)), hjust=0.5)
-  }else if(length(unique(as.character(labels_diff_$label))) == 1){
-    
-    graph = graph + geom_text(data=data.frame(),
-                              aes(label = labels_diff_$label ,
-                                  x = labels_diff_$cluster,
-                                  y=(maxs[maxs[,1][[1]]%in%labels_diff_$cluster,]$maxs + 0.5*maxs[maxs[,1][[1]]%in%labels_diff_$cluster,]$sdval)), hjust=0.5)
+  if(! is.null(labels_diff_)){
+    if(length(unique(as.character(labels_diff_$label)))>1){
+      
+      graph = graph + geom_text(data=data.frame(),
+                                aes(label = labels_diff_$label ,
+                                    x = labels_diff_$cluster,y=(maxs$maxs+0.5*maxs$sdval)), hjust=0.5)
+    }else if(length(unique(as.character(labels_diff_$label))) == 1){
+      
+      graph = graph + geom_text(data=data.frame(),
+                                aes(label = labels_diff_$label ,
+                                    x = labels_diff_$cluster,
+                                    y=(maxs[maxs[,1][[1]]%in%labels_diff_$cluster,]$maxs + 0.5*maxs[maxs[,1][[1]]%in%labels_diff_$cluster,]$sdval)), hjust=0.5)
+    }
   }
+  
   return(graph)
 }
 

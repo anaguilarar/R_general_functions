@@ -255,15 +255,21 @@ get_lower_tri<-function(cormat, showdiagonal = FALSE){
 
 
 
+
 corplotpaper = function(data, 
-                        method = "square",
-                        legend.title = "Pearson's\nCorrelation",
-                        outline.color = alpha('black',0.01),
-                        colors = scales::alpha(colorRampPalette(c( "black","white", "black"))(3), 0.8),
-                        tl.cex = 12,
-                        tl.col = "black",
-                        tl.srt = 0,
-                        add_signficance = TRUE){
+         method = "square",
+         legend.title = "Pearson's\nCorrelation",
+         outline.color = alpha('black',0.01),
+         colors = scales::alpha(colorRampPalette(c( "black","white", "black"))(3), 0.8),
+         tl.cex = 12,
+         tl.col = "black",
+         tl.srt = 0,
+         angleaxis = 0,
+         fontsizelabels = 4,
+         hjust = 1,
+         hjustx = 0,
+         sizesigni = 2,
+         add_signficance = TRUE){
   library(scales)
   library(caret)
   
@@ -294,9 +300,7 @@ corplotpaper = function(data,
   tl.cex = 12
   tl.col = "black"
   tl.srt = 0
-  p = p + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = tl.srt, 
-                                                             vjust = 1, size = tl.cex, hjust = 0.5), 
-                         axis.text.y = ggplot2::element_text(size = tl.cex)) + 
+  p = p + ggplot2::theme(axis.text.y = ggplot2::element_text(size = tl.cex)) + 
     ggplot2::coord_fixed()
   
   
@@ -304,12 +308,14 @@ corplotpaper = function(data,
     labs(x = "", y = '')+theme(#axis.text.x=element_blank(), #remove x axis labels
       #axis.ticks.x=element_blank(), #remove x axis ticks
       axis.text.y=element_blank(),  #remove y axis labels
-      axis.ticks.y=element_blank() )#+ annotate("text", x = "B", y = "Ca", label = "Some text")+
+      axis.ticks.y=element_blank(),
+      axis.text.x = element_text(size = fontsizelabels*3,
+                                 angle = angleaxis,hjust = hjustx, vjust = 1))
   
-
+  
   for(i in 1:(length(unique(as.character(mplot$Var2))))-1){
     labele = unique(as.character(mplot$Var2))[i]
-    p = p + annotate("text", x = labele, y = labele, label = paste0(labele,"-"), color = 'gray40', size = 4.5) 
+    p = p + annotate("text", x = labele, y = labele, label = paste0(labele,"-"), color = 'gray40', size = fontsizelabels, hjust=hjust) 
   }
   
   label <- round(x = mplot[, "value"], digits = 2)
@@ -332,16 +338,16 @@ corplotpaper = function(data,
                   mutate(id = paste0(Var1, Var2))%>%
                   select(id,value,label), by = 'id') %>%
       mutate(label = str_replace(as.character(paste0(label,'\n')), 'NA', ''))
-  
+    
     newlabel = str_replace(paste0(m$label,as.numeric(testlabel)), 'NA', '')
     p = p + ggplot2::geom_text(mapping = ggplot2::aes_string(x = "Var1",y = "Var2"), 
-                                 label = newlabel, color = "black", size = 2.5)
+                               label = newlabel, color = "black", size =sizesigni)
     
     
   }else{
     p = p+ 
       ggplot2::geom_text(mapping = ggplot2::aes_string(x = "Var1",y = "Var2"), 
-                         label = testlabel, color = "black", size = 2.5)
+                         label = testlabel, color = "black", size =sizesigni)
   }
   
   

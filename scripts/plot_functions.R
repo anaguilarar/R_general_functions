@@ -6,40 +6,40 @@ library(ggplot2)
 library(rcompanion)
 library(agricolae)
 library(multcompView)
-theme_Publication <- function(base_size=14, base_family="helvetica", xangle = 0, xhjust = 0.5, 
-                              legendposition = "bottom", legendsize = 10) {
+theme_Publication = function(base_size=14, base_family="helvetica", xangle = 0, xhjust = 0.5, 
+                             legendposition = "bottom", legendsize = 10,legendtitlesize = 12) {
   library(grid)
   library(ggthemes)
-
+  
   (theme_foundation(base_size=base_size,
                     base_family=base_family)+ theme(
-    plot.title = element_text(face = "bold",
-                                      size = rel(1.2), hjust = 0.5),
-            text = element_text(),
-            panel.background = element_rect(colour = NA),
-            plot.background = element_rect(colour = NA),
-            panel.border = element_rect(colour = NA),
-            axis.title = element_text(face = "bold",size = rel(1)),
-            axis.title.y = element_text(angle=90,vjust =2),
-            axis.title.x = element_text(vjust = -0.2),
-            axis.text.x = element_text(angle = xangle,hjust =xhjust),
-            
-            axis.line = element_line(colour="black"),
-            axis.ticks = element_line(),
-            panel.grid.major = element_line(colour="#f0f0f0"),
-            panel.grid.minor = element_blank(),
-            legend.key = element_rect(colour = NA),
-            legend.position = legendposition,
-            legend.direction = "horizontal",
-            legend.key.size= unit(0.2, "cm"),
-            legend.margin = unit(0, "cm"),
-            legend.title = element_text(face="italic"),
-            legend.text = element_text(size = legendsize),
-            plot.margin=unit(c(10,5,5,5),"mm"),
-            strip.background=element_rect(colour="#f0f0f0",fill="#f0f0f0"),
-            strip.text = element_text(face="bold")
-    ))
-
+                      plot.title = element_text(face = "bold",
+                                                size = rel(1.2), hjust = 0.5),
+                      text = element_text(),
+                      panel.background = element_rect(colour = NA),
+                      plot.background = element_rect(colour = NA),
+                      panel.border = element_rect(colour = NA),
+                      axis.title = element_text(face = "bold",size = rel(1)),
+                      axis.title.y = element_text(angle=90,vjust =2),
+                      axis.title.x = element_text(vjust = -0.2),
+                      axis.text.x = element_text(angle = xangle,hjust =xhjust),
+                      
+                      axis.line = element_line(colour="black"),
+                      axis.ticks = element_line(),
+                      panel.grid.major = element_line(colour="#f0f0f0"),
+                      panel.grid.minor = element_blank(),
+                      legend.key = element_rect(colour = NA),
+                      legend.position = legendposition,
+                      legend.direction = "horizontal",
+                      legend.key.size= unit(0.2, "cm"),
+                      legend.margin = unit(0, "cm"),
+                      legend.title = element_text(face="italic",size = legendtitlesize),
+                      legend.text = element_text(size = legendsize),
+                      plot.margin=unit(c(10,5,5,5),"mm"),
+                      strip.background=element_rect(colour="#f0f0f0",fill="#f0f0f0"),
+                      strip.text = element_text(face="bold")
+                    ))
+  
 }
 
 
@@ -74,10 +74,10 @@ grafica_Numerica = function(eventos , x_variable , y_variable,
   
 }
 
+
 grafica_Categorica = function(eventos , x_variable , y_variable,
-                              name_x_axes="",name_y_axes ="" , kruskal = T, xangle = 90, xhjust = 0){
+                   name_x_axes="",name_y_axes ="" , kruskal = T, xangle = 90, xhjust = 0){
   
-  labels_diff_=NULL
   if(length(levels(factor(as.character(eventos[,x_variable]))))>1 & kruskal){
     
     if (length(levels(factor(as.character(eventos[,x_variable]))))==2){
@@ -103,17 +103,22 @@ grafica_Categorica = function(eventos , x_variable , y_variable,
       
       
       PT1 = fullPTable(PT$p.value)
-      labels_diff = multcompLetters(PT1,
-                                    compare="<",
-                                    threshold=0.05,
-                                    Letters=letters,
-                                    reversed = FALSE)
+      if(!T %in% is.na(PT1)){
+        labels_diff = multcompLetters(PT1,
+                                      compare="<",
+                                      threshold=0.05,
+                                      Letters=letters,
+                                      reversed = FALSE)
+        
+        labels_diff_ = data.frame(cluster = names(labels_diff$monospacedLetters) ,
+                                  label = as.character(labels_diff$monospacedLetters))
+        print(labels_diff_)
+      }else{
+        labels_diff = list(Letters = 1)
+      }
       
-      labels_diff_ = data.frame(cluster = names(labels_diff$monospacedLetters) ,
-                                label = as.character(labels_diff$monospacedLetters))
-      print(labels_diff_)
     }
-
+    
     
   }else{
     labels_diff = list(Letters = 1)
@@ -157,6 +162,7 @@ grafica_Categorica = function(eventos , x_variable , y_variable,
 
 
 
+
 grafica_rendimiento = function(eventos, y_variable,name_y_axes){
   ggplot(eventos, aes(eventos[,y_variable]))+geom_histogram()+
     labs(x = name_y_axes )+theme_Publication()
@@ -191,3 +197,152 @@ plot_multiplevariables <- function(data, featureslist, yfeature , ylabel = NA,co
   
   
 }
+
+
+##### Corplot
+
+
+significance_diference_labels = function(pvalue, 
+                                         labels_sign_values = c("***"=0.001, "**"=0.01,  "*"=0.05,"ns" = 1)){
+  
+  map_signif_level <- labels_sign_values
+  labalhyp = " "
+  
+  for(i in 1:length(map_signif_level))
+    if(pvalue <= map_signif_level[i]){
+      labalhyp = names(map_signif_level)[i]
+      break
+    }
+      
+  
+  return(labalhyp)
+  
+}
+
+
+theme_corrplot = function (base_size = 15, base_family = "", flip = FALSE) 
+{
+  
+  res <- theme_grey(base_size = base_size, base_family = base_family) + 
+    theme(panel.background = element_rect(fill = "white"), 
+          legend.background = element_rect(fill = "white"), 
+          legend.position = "right")
+  if (flip) {
+    res <- res + theme(panel.grid.major.x = element_line(linetype = "dotted", 
+                                                         color = "white"), axis.line.y = element_line(color = "black"))
+  }
+  else {
+    res <- res + theme(panel.grid.major.y = element_line(linetype = "dotted", 
+                                                         color = "white"))
+  }
+  res
+}
+
+
+get_lower_tri<-function(cormat, showdiagonal = FALSE){
+  cormat[upper.tri(cormat)] <- NA
+  if(!showdiagonal){
+    for(i in 1:nrow(cormat)){
+      cormat[i,i] <- 0
+    }
+  }
+  
+  return(cormat)
+}
+
+
+
+corplotpaper = function(data, 
+                        method = "square",
+                        legend.title = "Pearson's\nCorrelation",
+                        outline.color = alpha('black',0.01),
+                        colors = scales::alpha(colorRampPalette(c( "black","white", "black"))(3), 0.8),
+                        tl.cex = 12,
+                        tl.col = "black",
+                        tl.srt = 0,
+                        add_signficance = TRUE){
+  library(scales)
+  library(caret)
+  
+  preProcValues <- preProcess(data, method = c("center", "scale"))
+  
+  trdata = predict(preProcValues, data)
+  
+  #corr <- get_lower_tri(m)
+  corrdata = cor(trdata)
+  mplot = reshape2::melt( get_lower_tri(corrdata), na.rm = TRUE)
+  
+  
+  
+  p <- ggplot2::ggplot(data = mplot, mapping = ggplot2::aes_string(x = "Var1", 
+                                                                   y = "Var2", fill = "value"))
+  
+  if (method == "square") {
+    p <- p + ggplot2::geom_tile(color = outline.color)
+  }
+  
+  p = p + ggplot2::scale_fill_gradient2(low = colors[1], 
+                                        high = colors[3], mid = colors[2], 
+                                        midpoint = 0, 
+                                        limit = c(-1,1), 
+                                        space = "Lab", name = legend.title)
+  
+  
+  tl.cex = 12
+  tl.col = "black"
+  tl.srt = 0
+  p = p + ggplot2::theme(axis.text.x = ggplot2::element_text(angle = tl.srt, 
+                                                             vjust = 1, size = tl.cex, hjust = 0.5), 
+                         axis.text.y = ggplot2::element_text(size = tl.cex)) + 
+    ggplot2::coord_fixed()
+  
+  
+  p = p+ theme_corrplot() + #scale_color_manual(colors) + 
+    labs(x = "", y = '')+theme(#axis.text.x=element_blank(), #remove x axis labels
+      #axis.ticks.x=element_blank(), #remove x axis ticks
+      axis.text.y=element_blank(),  #remove y axis labels
+      axis.ticks.y=element_blank() )#+ annotate("text", x = "B", y = "Ca", label = "Some text")+
+  
+
+  for(i in 1:(length(unique(as.character(mplot$Var2))))-1){
+    labele = unique(as.character(mplot$Var2))[i]
+    p = p + annotate("text", x = labele, y = labele, label = paste0(labele,"-"), color = 'gray40', size = 4.5) 
+  }
+  
+  label <- round(x = mplot[, "value"], digits = 2)
+  testlabel = str_replace(as.character(label),'0','')
+  testlabel = as.numeric(testlabel)
+  
+  if(add_signficance){
+    y= 'Co'
+    x = 'Ca43'
+    
+    library(Hmisc)
+    res <- rcorr(as.matrix(trdata))
+    
+    ressig = reshape2::melt( res$P, na.rm = TRUE)
+    ressig = ressig%>%mutate(label = sapply(value, significance_diference_labels))
+    
+    
+    m = mplot %>% mutate(id = paste0(Var1, Var2)) %>% 
+      left_join(ressig%>% 
+                  mutate(id = paste0(Var1, Var2))%>%
+                  select(id,value,label), by = 'id') %>%
+      mutate(label = str_replace(as.character(paste0(label,'\n')), 'NA', ''))
+  
+    newlabel = str_replace(paste0(m$label,as.numeric(testlabel)), 'NA', '')
+    p = p + ggplot2::geom_text(mapping = ggplot2::aes_string(x = "Var1",y = "Var2"), 
+                                 label = newlabel, color = "black", size = 2.5)
+    
+    
+  }else{
+    p = p+ 
+      ggplot2::geom_text(mapping = ggplot2::aes_string(x = "Var1",y = "Var2"), 
+                         label = testlabel, color = "black", size = 2.5)
+  }
+  
+  
+  return(p)
+  
+}
+

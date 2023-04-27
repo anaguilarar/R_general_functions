@@ -309,13 +309,16 @@ corplotpaper = function(data,
       #axis.ticks.x=element_blank(), #remove x axis ticks
       axis.text.y=element_blank(),  #remove y axis labels
       axis.ticks.y=element_blank(),
+      axis.ticks.x = element_blank(),
       axis.text.x = element_text(size = fontsizelabels*3,
+                                 color = 'gray40',
                                  angle = angleaxis,hjust = hjustx, vjust = 1))
   
   
   for(i in 1:(length(unique(as.character(mplot$Var2))))-1){
     labele = unique(as.character(mplot$Var2))[i]
-    p = p + annotate("text", x = labele, y = labele, label = paste0(labele,"-"), color = 'gray40', size = fontsizelabels, hjust=hjust) 
+    p = p + annotate("text", x = labele, y = labele, label = paste0(labele," "), color = 'gray40', 
+                     size = fontsizelabels*1.1, hjust=hjust) 
   }
   
   label <- round(x = mplot[, "value"], digits = 2)
@@ -323,9 +326,7 @@ corplotpaper = function(data,
   testlabel = as.numeric(testlabel)
   
   if(add_signficance){
-    y= 'Co'
-    x = 'Ca43'
-    
+
     library(Hmisc)
     res <- rcorr(as.matrix(trdata))
     

@@ -7,7 +7,7 @@ library(rcompanion)
 library(agricolae)
 library(multcompView)
 theme_Publication = function(base_size=14, base_family="helvetica", xangle = 0, xhjust = 0.5, 
-                             legendposition = "bottom", legendsize = 10,legendtitlesize = 12) {
+                             legendposition = "bottom", legendsize = 10,legendtitlesize = 12, legenddirection = "horizontal") {
   library(grid)
   library(ggthemes)
   
@@ -30,7 +30,7 @@ theme_Publication = function(base_size=14, base_family="helvetica", xangle = 0, 
                       panel.grid.minor = element_blank(),
                       legend.key = element_rect(colour = NA),
                       legend.position = legendposition,
-                      legend.direction = "horizontal",
+                      legend.direction = legenddirection,
                       legend.key.size= unit(0.2, "cm"),
                       legend.margin = unit(0, "cm"),
                       legend.title = element_text(face="italic",size = legendtitlesize),

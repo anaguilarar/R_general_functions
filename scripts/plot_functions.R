@@ -127,7 +127,7 @@ grafica_Categorica = function(eventos , x_variable , y_variable,
   
   ## calcular el valor m?ximo de los datos para colocar la letra
   maxs = eventos %>% group_by(eval(parse(text = x_variable))) %>% 
-    summarize(maxs = max(eval(parse(text = y_variable)), na.rm = T),
+    dplyr::summarize(maxs = max(eval(parse(text = y_variable)), na.rm = T),
               sdval = sd(eval(parse(text = y_variable)), na.rm = T))
   
   

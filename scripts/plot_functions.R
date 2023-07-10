@@ -255,7 +255,6 @@ get_lower_tri<-function(cormat, showdiagonal = FALSE){
 
 
 
-
 corplotpaper = function(data, 
          method = "square",
          legend.title = "Pearson's\nCorrelation",
@@ -269,6 +268,7 @@ corplotpaper = function(data,
          hjust = 1,
          hjustx = 0,
          sizesigni = 2,
+         marginleft=1,
          add_signficance = TRUE){
   library(scales)
   library(caret)
@@ -318,7 +318,8 @@ corplotpaper = function(data,
   for(i in 1:(length(unique(as.character(mplot$Var2))))-1){
     labele = unique(as.character(mplot$Var2))[i]
     p = p + annotate("text", x = labele, y = labele, label = paste0(labele," "), color = 'gray40', 
-                     size = fontsizelabels*1.1, hjust=hjust) 
+                     size = fontsizelabels*1.1, hjust=hjust,
+                     ) 
   }
   
   label <- round(x = mplot[, "value"], digits = 2)
@@ -326,7 +327,7 @@ corplotpaper = function(data,
   testlabel = as.numeric(testlabel)
   
   if(add_signficance){
-
+    
     library(Hmisc)
     res <- rcorr(as.matrix(trdata))
     
@@ -352,7 +353,11 @@ corplotpaper = function(data,
   }
   
   
-  return(p)
+  return(p+
+           coord_cartesian( # This focuses the x-axis on the range of interest
+             clip = 'off')  +   # This keeps the labels from disappearing
+           theme(plot.margin =  margin(l=marginleft,unit= "cm")))
   
 }
+
 

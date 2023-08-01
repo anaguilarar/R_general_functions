@@ -75,9 +75,8 @@ grafica_Numerica = function(eventos , x_variable , y_variable,
 }
 
 
-
 grafica_Categorica = function(eventos , x_variable , y_variable,
-                   name_x_axes="",name_y_axes ="" , kruskal = T, xangle = 90, xhjust = 0){
+         name_x_axes="",name_y_axes ="" , kruskal = T, xangle = 90, xhjust = 0, boxwidth = 1){
   
   labels_diff_ = NULL
   
@@ -128,10 +127,10 @@ grafica_Categorica = function(eventos , x_variable , y_variable,
   ## calcular el valor m?ximo de los datos para colocar la letra
   maxs = eventos %>% group_by(eval(parse(text = x_variable))) %>% 
     dplyr::summarize(maxs = max(eval(parse(text = y_variable)), na.rm = T),
-              sdval = sd(eval(parse(text = y_variable)), na.rm = T))
+                     sdval = sd(eval(parse(text = y_variable)), na.rm = T))
   
   
-  graph = ggplot(eventos, aes(eventos[,x_variable],eventos[,y_variable]))+geom_boxplot()
+  graph = ggplot(eventos, aes(eventos[,x_variable],eventos[,y_variable]))+geom_boxplot(width = boxwidth)
   ## asignar el nombre de los labels
   if (is(name_x_axes)[1]=="expression"){
     
@@ -162,7 +161,6 @@ grafica_Categorica = function(eventos , x_variable , y_variable,
   
   return(graph)
 }
-
 
 
 

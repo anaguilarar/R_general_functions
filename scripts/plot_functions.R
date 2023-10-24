@@ -359,3 +359,131 @@ corplotpaper = function(data,
 }
 
 
+
+get_diff_label = function(df,y_variable,x_variable, p.adjust.method = "BH"){
+  
+  PT = pairwise.wilcox.test(df[,y_variable] , 
+                            factor(as.character(df[,x_variable]))  , p.adjust.method = p.adjust.method)
+  
+  
+  PT1 = fullPTable(PT$p.value)
+  if(!T %in% is.na(PT1)){
+    labels_diff = multcompLetters(PT1,
+                                  compare="<",
+                                  threshold=0.05,
+                                  Letters=letters,
+                                  reversed = FALSE)
+    
+    labels_diff_ = data.frame(cluster = names(labels_diff$monospacedLetters) ,
+                              label = as.character(labels_diff$monospacedLetters))
+    
+  }else{
+    labels_diff_ = NULL
+  }
+  return(labels_diff_)
+}
+
+get_signif_diff = function(df,y_variable,x_variable){
+  map_signif_level <- c("****"=0.0001, "***"=0.001, "**"=0.01,  "*"=0.05,"ns" = 1)
+  m = wilcox.test(df[,y_variable]~factor(as.character(df[,x_variable])))
+  
+  labalhyp = "****"
+  
+  test = m$p.value
+  for(i in 2:length(map_signif_level))
+    if(test>map_signif_level[i-1])
+      labalhyp = names(map_signif_level)[i]
+  
+  labels_diff_ = data.frame(cluster = levels(factor(as.character(df[,x_variable])))[1] ,
+                            label = paste0("p = ",signif(test,digits = 5),"\n",labalhyp))
+  return(labels_diff_)
+}
+
+grafica_Categorica_Grupos = function(eventos=df , x_variable="feature" , y_variable = "value",
+                              groupby = NULL,
+                              name_x_axes="",name_y_axes ="" , 
+                              kruskal = T, xangle = 90, xhjust = 0,
+                              
+                              boxwidth = 1){
+  
+  labels_diff_ = NULL
+
+  if(length(levels(factor(as.character(eventos[,x_variable]))))>1 & kruskal){
+    
+    if (length(levels(factor(as.character(eventos[,x_variable]))))==2){
+      
+      
+      labels_diff_ = eventos%>%
+        group_by(!!(sym(x_variable)))%>%
+        group_modify(~ get_signif_diff(.x%>%data.frame(),y_variable,groupby))%>%
+        data.frame()%>%
+        rename(!!groupby:= cluster)
+      
+    
+      
+    }else{
+      
+      eventos = eventos[!is.na(eventos[,x_variable]),]
+      labels_diff_ = eventos%>%
+        group_by(eval(parse(text = x_variable)))%>%
+        group_modify(~ get_diff_label(.x%>%data.frame(),y_variable,groupby))%>%
+        data.frame()
+      
+    }
+    
+  }
+  xlabs = eventos%>%
+    group_by(!!(sym(x_variable)))%>%
+    group_modify(~  data.frame(label = paste(levels(factor(.x%>%pull(groupby)))," (N=",table(factor(.x%>%pull(groupby))),")",sep="")%>%
+                c()%>%
+                paste0(collapse = '\n')))%>%
+    mutate(label = paste0(!!(sym(x_variable)),'\n',label ))%>%
+    pull(label)
+    
+  
+  
+  #xlabs <- paste(levels(factor(eventos[,x_variable])),"\n(N=",table(factor(eventos[,groupby])),")",sep="")
+  
+  ## calcular el valor m?ximo de los datos para colocar la letra
+  maxs = eventos %>% group_by(eval(parse(text = x_variable))) %>% 
+    dplyr::summarize(maxs = max(eval(parse(text = y_variable)), na.rm = T),
+                     sdval = sd(eval(parse(text = y_variable)), na.rm = T))
+  
+  
+  graph = eventos%>%
+    ggplot(aes(!!(sym(x_variable)), !!(sym(y_variable)), color = !!(sym(groupby))))+geom_boxplot(width = boxwidth)
+  ## asignar el nombre de los labels
+  if (is(name_x_axes)[1]=="expression"){
+    
+  }else{
+    if (name_x_axes == ""){
+      name_x_axes = x_variable
+    }
+    if (name_y_axes == ""){
+      name_y_axes = y_variable
+    }
+  }
+  graph = graph + labs(y = name_y_axes , x = name_x_axes)+
+    scale_x_discrete(labels=xlabs)+theme_Publication(xangle = 0, xhjust = 0.5)
+  if(! is.null(labels_diff_)){
+    
+    if(length(unique(as.character(labels_diff_$label)))>1){
+      
+      graph = graph + geom_text(data=labels_diff_,
+                                aes(label = label ,
+                                    x = !!(sym(x_variable)),y=(maxs$maxs+0.5*maxs$sdval)), hjust=0.5,show.legend = FALSE)
+      
+    }else if(length(unique(as.character(labels_diff_$label))) == 1){
+      
+      graph = graph + geom_text(data=data.frame(),
+                                aes(label = labels_diff_$label ,
+                                    x = labels_diff_$cluster,
+                                    y=(maxs[maxs[,1][[1]]%in%labels_diff_$cluster,]$maxs + 0.5*maxs[maxs[,1][[1]]%in%labels_diff_$cluster,]$sdval)), hjust=0.5)
+    }
+  }
+  
+  return(graph)
+}
+
+
+

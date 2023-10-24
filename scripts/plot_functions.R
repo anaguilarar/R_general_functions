@@ -399,18 +399,18 @@ get_signif_diff = function(df,y_variable,x_variable){
   return(labels_diff_)
 }
 
-grafica_Categorica_Grupos = function(eventos=df , x_variable="feature" , y_variable = "value",
-                              groupby = NULL,
-                              name_x_axes="",name_y_axes ="" , 
-                              kruskal = T, xangle = 90, xhjust = 0,
-                              
-                              boxwidth = 1){
+grafica_Categorica_Grupos = function(eventos, x_variable, y_variable,
+                                     groupby = NULL,
+                                     name_x_axes="",name_y_axes ="" , 
+                                     kruskal = T, xangle = 90, xhjust = 0,
+                                     
+                                     boxwidth = 1){
   
   labels_diff_ = NULL
-
+  
   if(length(levels(factor(as.character(eventos[,x_variable]))))>1 & kruskal){
     
-    if (length(levels(factor(as.character(eventos[,x_variable]))))==2){
+    if (length(levels(factor(as.character(eventos[,groupby]))))==2){
       
       
       labels_diff_ = eventos%>%
@@ -419,15 +419,16 @@ grafica_Categorica_Grupos = function(eventos=df , x_variable="feature" , y_varia
         data.frame()%>%
         rename(!!groupby:= cluster)
       
-    
+      
       
     }else{
       
       eventos = eventos[!is.na(eventos[,x_variable]),]
       labels_diff_ = eventos%>%
-        group_by(eval(parse(text = x_variable)))%>%
+        group_by(!!(sym(x_variable)))%>%
         group_modify(~ get_diff_label(.x%>%data.frame(),y_variable,groupby))%>%
-        data.frame()
+        data.frame()%>%
+        rename(!!groupby:= cluster)
       
     }
     
@@ -435,11 +436,11 @@ grafica_Categorica_Grupos = function(eventos=df , x_variable="feature" , y_varia
   xlabs = eventos%>%
     group_by(!!(sym(x_variable)))%>%
     group_modify(~  data.frame(label = paste(levels(factor(.x%>%pull(groupby)))," (N=",table(factor(.x%>%pull(groupby))),")",sep="")%>%
-                c()%>%
-                paste0(collapse = '\n')))%>%
+                                 c()%>%
+                                 paste0(collapse = '\n')))%>%
     mutate(label = paste0(!!(sym(x_variable)),'\n',label ))%>%
     pull(label)
-    
+  
   
   
   #xlabs <- paste(levels(factor(eventos[,x_variable])),"\n(N=",table(factor(eventos[,groupby])),")",sep="")
@@ -466,24 +467,15 @@ grafica_Categorica_Grupos = function(eventos=df , x_variable="feature" , y_varia
   graph = graph + labs(y = name_y_axes , x = name_x_axes)+
     scale_x_discrete(labels=xlabs)+theme_Publication(xangle = 0, xhjust = 0.5)
   if(! is.null(labels_diff_)){
-    
-    if(length(unique(as.character(labels_diff_$label)))>1){
-      
-      graph = graph + geom_text(data=labels_diff_,
+    print(labels_diff_)
+    graph = graph + geom_text(data=labels_diff_,
                                 aes(label = label ,
                                     x = !!(sym(x_variable)),y=(maxs$maxs+0.5*maxs$sdval)), hjust=0.5,show.legend = FALSE)
       
-    }else if(length(unique(as.character(labels_diff_$label))) == 1){
-      
-      graph = graph + geom_text(data=data.frame(),
-                                aes(label = labels_diff_$label ,
-                                    x = labels_diff_$cluster,
-                                    y=(maxs[maxs[,1][[1]]%in%labels_diff_$cluster,]$maxs + 0.5*maxs[maxs[,1][[1]]%in%labels_diff_$cluster,]$sdval)), hjust=0.5)
-    }
+    
   }
   
   return(graph)
 }
-
 
 

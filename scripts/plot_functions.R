@@ -359,6 +359,21 @@ corplotpaper = function(data,
 }
 
 
+get_signif_diff = function(df,y_variable,x_variable){
+  map_signif_level <- c("****"=0.0001, "***"=0.001, "**"=0.01,  "*"=0.05,"ns" = 1)
+  m = wilcox.test(df[,y_variable]~factor(as.character(df[,x_variable])))
+
+  labalhyp = "****"
+
+  test = m$p.value
+  for(i in 2:length(map_signif_level))
+    if(test>map_signif_level[i-1])
+      labalhyp = names(map_signif_level)[i]
+
+  labels_diff_ = data.frame(cluster = levels(factor(as.character(df[,x_variable])))[1] ,
+                            label = paste0("p = ",signif(test,digits = 5),"\n",labalhyp))
+  return(labels_diff_)
+}
 
 get_diff_label = function(df,y_variable,x_variable, p.adjust.method = "BH"){
   

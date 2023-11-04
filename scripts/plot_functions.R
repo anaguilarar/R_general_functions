@@ -460,8 +460,8 @@ grafica_Categorica_Grupos = function(eventos, x_variable, y_variable,
     maxs = eventos %>% group_by(eval(parse(text = x_variable)), eval(parse(text = groupby))) %>% 
       dplyr::summarize(maxs = max(eval(parse(text = y_variable)), na.rm = T),
                        sdval = sd(eval(parse(text = y_variable)), na.rm = T))
-    maxs = maxs%>%
-      rename(!!x_variable:=names(maxs)[1])
+    #maxs = maxs%>%
+    #  rename(!!x_variable:=names(maxs)[1])
     
   }else{
     maxs = eventos %>% group_by(eval(parse(text = x_variable))) %>% 

@@ -376,35 +376,45 @@ get_diff_label = function(df,y_variable,x_variable, p.adjust.method = "BH"){
     
     labels_diff_ = data.frame(cluster = names(labels_diff$monospacedLetters) ,
                               label = as.character(labels_diff$monospacedLetters))
+    if(dim(labels_diff_)[1] == 0){
+      uniquexvar = unique(df[,x_variable])
+      labels_diff_ = data.frame(label = '')%>%
+        mutate(cluster= uniquexvar[1])%>%data.frame()
+      if(length(uniquexvar)>1){
+        for(i in 2:length(uniquexvar)){
+          labels_diff_ = labels_diff_%>%
+            rbind(data.frame(label = '')%>%
+                    mutate(cluster= uniquexvar[i]))%>%data.frame()
+        }
+      }
+      labels_diff_ = labels_diff_%>%
+        dplyr::select(cluster, label)
+    }
     
   }else{
-    labels_diff_ = NULL
+    uniquexvar = unique(df[,x_variable])
+    labels_diff_ = data.frame(label = '')%>%
+      mutate(!!groupby:= uniquexvar[1])%>%data.frame()
+    if(length(uniquexvar)>1){
+      for(i in 2:length(uniquexvar)){
+        labels_diff_ = labels_diff_%>%
+          rbind(data.frame(label = '')%>%
+                  mutate(!!groupby:= uniquexvar[i]))%>%data.frame()
+      }
+    }
+    labels_diff_ = labels_diff_%>%
+      dplyr::select(cluster, label)
   }
   return(labels_diff_)
 }
 
-get_signif_diff = function(df,y_variable,x_variable){
-  map_signif_level <- c("****"=0.0001, "***"=0.001, "**"=0.01,  "*"=0.05,"ns" = 1)
-  m = wilcox.test(df[,y_variable]~factor(as.character(df[,x_variable])))
-  
-  labalhyp = "****"
-  
-  test = m$p.value
-  for(i in 2:length(map_signif_level))
-    if(test>map_signif_level[i-1])
-      labalhyp = names(map_signif_level)[i]
-  
-  labels_diff_ = data.frame(cluster = levels(factor(as.character(df[,x_variable])))[1] ,
-                            label = paste0("p = ",signif(test,digits = 5),"\n",labalhyp))
-  return(labels_diff_)
-}
 
 grafica_Categorica_Grupos = function(eventos, x_variable, y_variable,
-                                     groupby = NULL,
-                                     name_x_axes="",name_y_axes ="" , 
-                                     kruskal = T, xangle = 90, xhjust = 0,
-                                     
-                                     boxwidth = 1){
+         groupby = NULL,
+         name_x_axes="",name_y_axes ="" , 
+         kruskal = T, xangle = 90, xhjust = 0,
+         
+         boxwidth = 1){
   
   labels_diff_ = NULL
   
@@ -422,7 +432,9 @@ grafica_Categorica_Grupos = function(eventos, x_variable, y_variable,
       
       
     }else{
-      
+      x_variable = 'feature'
+      df = eventos%>%
+        filter(feature == 'blue')%>%data.frame()
       eventos = eventos[!is.na(eventos[,x_variable]),]
       labels_diff_ = eventos%>%
         group_by(!!(sym(x_variable)))%>%
@@ -446,11 +458,16 @@ grafica_Categorica_Grupos = function(eventos, x_variable, y_variable,
   #xlabs <- paste(levels(factor(eventos[,x_variable])),"\n(N=",table(factor(eventos[,groupby])),")",sep="")
   
   ## calcular el valor m?ximo de los datos para colocar la letra
-  maxs = eventos %>% group_by(eval(parse(text = x_variable))) %>% 
-    dplyr::summarize(maxs = max(eval(parse(text = y_variable)), na.rm = T),
-                     sdval = sd(eval(parse(text = y_variable)), na.rm = T))
-  
-  
+  if(length(levels(factor(as.character(eventos[,groupby]))))!=2){
+    maxs = eventos %>% group_by(eval(parse(text = x_variable)), eval(parse(text = groupby))) %>% 
+      dplyr::summarize(maxs = max(eval(parse(text = y_variable)), na.rm = T),
+                       sdval = sd(eval(parse(text = y_variable)), na.rm = T))%>%
+      rename(!!x_variable:=names(maxs)[1])
+  }else{
+    maxs = eventos %>% group_by(eval(parse(text = x_variable))) %>% 
+      dplyr::summarize(maxs = max(eval(parse(text = y_variable)), na.rm = T),
+                       sdval = sd(eval(parse(text = y_variable)), na.rm = T))
+  }
   graph = eventos%>%
     ggplot(aes(!!(sym(x_variable)), !!(sym(y_variable)), color = !!(sym(groupby))))+geom_boxplot(width = boxwidth)
   ## asignar el nombre de los labels
@@ -468,10 +485,13 @@ grafica_Categorica_Grupos = function(eventos, x_variable, y_variable,
     scale_x_discrete(labels=xlabs)+theme_Publication(xangle = 0, xhjust = 0.5)
   if(! is.null(labels_diff_)){
     print(labels_diff_)
+    
+    
     graph = graph + geom_text(data=labels_diff_,
-                                aes(label = label ,
-                                    x = !!(sym(x_variable)),y=(maxs$maxs+0.5*maxs$sdval)), hjust=0.5,show.legend = FALSE)
-      
+                              aes(label = label ,
+                                  x = !!(sym(x_variable)),y=(maxs$maxs+0.5*maxs$sdval)), 
+                              hjust=0.5,show.legend = FALSE, position = position_dodge(width = 0.8))
+    
     
   }
   

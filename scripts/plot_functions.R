@@ -410,11 +410,11 @@ get_diff_label = function(df,y_variable,x_variable, p.adjust.method = "BH"){
 
 
 grafica_Categorica_Grupos = function(eventos, x_variable, y_variable,
-         groupby = NULL,
-         name_x_axes="",name_y_axes ="" , 
-         kruskal = T, xangle = 90, xhjust = 0,
-         
-         boxwidth = 1){
+                                     groupby = NULL,
+                                     name_x_axes="",name_y_axes ="" , 
+                                     kruskal = T, xangle = 90, xhjust = 0,
+                                     
+                                     boxwidth = 1){
   
   labels_diff_ = NULL
   
@@ -453,21 +453,22 @@ grafica_Categorica_Grupos = function(eventos, x_variable, y_variable,
     mutate(label = paste0(!!(sym(x_variable)),'\n',label ))%>%
     pull(label)
   
-  
-  
   #xlabs <- paste(levels(factor(eventos[,x_variable])),"\n(N=",table(factor(eventos[,groupby])),")",sep="")
   
   ## calcular el valor m?ximo de los datos para colocar la letra
   if(length(levels(factor(as.character(eventos[,groupby]))))!=2){
     maxs = eventos %>% group_by(eval(parse(text = x_variable)), eval(parse(text = groupby))) %>% 
       dplyr::summarize(maxs = max(eval(parse(text = y_variable)), na.rm = T),
-                       sdval = sd(eval(parse(text = y_variable)), na.rm = T))%>%
+                       sdval = sd(eval(parse(text = y_variable)), na.rm = T))
+    maxs = maxs%>%
       rename(!!x_variable:=names(maxs)[1])
+    
   }else{
     maxs = eventos %>% group_by(eval(parse(text = x_variable))) %>% 
       dplyr::summarize(maxs = max(eval(parse(text = y_variable)), na.rm = T),
                        sdval = sd(eval(parse(text = y_variable)), na.rm = T))
   }
+  
   graph = eventos%>%
     ggplot(aes(!!(sym(x_variable)), !!(sym(y_variable)), color = !!(sym(groupby))))+geom_boxplot(width = boxwidth)
   ## asignar el nombre de los labels
@@ -497,5 +498,3 @@ grafica_Categorica_Grupos = function(eventos, x_variable, y_variable,
   
   return(graph)
 }
-
-

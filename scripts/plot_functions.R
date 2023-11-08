@@ -251,8 +251,6 @@ get_lower_tri<-function(cormat, showdiagonal = FALSE){
   return(cormat)
 }
 
-
-
 corplotpaper = function(data, 
          method = "square",
          legend.title = "Pearson's\nCorrelation",
@@ -260,6 +258,7 @@ corplotpaper = function(data,
          colors = scales::alpha(colorRampPalette(c( "black","white", "black"))(3), 0.8),
          tl.cex = 12,
          tl.col = "black",
+         ylabelcol = "gray40",
          tl.srt = 0,
          angleaxis = 0,
          fontsizelabels = 4,
@@ -267,6 +266,8 @@ corplotpaper = function(data,
          hjustx = 0,
          sizesigni = 2,
          marginleft=1,
+         legendtitlesize=15,
+         legendsize = 12,
          add_signficance = TRUE){
   library(scales)
   library(caret)
@@ -308,16 +309,18 @@ corplotpaper = function(data,
       axis.text.y=element_blank(),  #remove y axis labels
       axis.ticks.y=element_blank(),
       axis.ticks.x = element_blank(),
+      legend.title = element_text(face="italic",size = legendtitlesize),
+      legend.text = element_text(size = legendsize),
       axis.text.x = element_text(size = fontsizelabels*3,
-                                 color = 'gray40',
+                                 color = ylabelcol,
                                  angle = angleaxis,hjust = hjustx, vjust = 1))
   
   
   for(i in 1:(length(unique(as.character(mplot$Var2))))-1){
     labele = unique(as.character(mplot$Var2))[i]
-    p = p + annotate("text", x = labele, y = labele, label = paste0(labele," "), color = 'gray40', 
+    p = p + annotate("text", x = labele, y = labele, label = paste0(labele," "), color = ylabelcol, 
                      size = fontsizelabels*1.1, hjust=hjust,
-                     ) 
+    ) 
   }
   
   label <- round(x = mplot[, "value"], digits = 2)
@@ -357,6 +360,7 @@ corplotpaper = function(data,
            theme(plot.margin =  margin(l=marginleft,unit= "cm")))
   
 }
+
 
 
 get_signif_diff = function(df,y_variable,x_variable){

@@ -430,7 +430,7 @@ get_diff_label = function(df,y_variable,x_variable, p.adjust.method = "BH"){
 
 grafica_Categorica_Grupos = function(eventos, x_variable, y_variable,
                                      groupby = NULL,
-                                     name_x_axes="",name_y_axes ="" , 
+                                     name_x_axes="",name_y_axes ="", 
                                      kruskal = T, xangle = 90, xhjust = 0,
                                      
                                      boxwidth = 1){
@@ -479,6 +479,8 @@ grafica_Categorica_Grupos = function(eventos, x_variable, y_variable,
     maxs = eventos %>% group_by(eval(parse(text = x_variable)), eval(parse(text = groupby))) %>% 
       dplyr::summarize(maxs = max(eval(parse(text = y_variable)), na.rm = T),
                        sdval = sd(eval(parse(text = y_variable)), na.rm = T))
+    
+    names(maxs)[1:2] = c(x_variable,groupby)
     #maxs = maxs%>%
     #  rename(!!x_variable:=names(maxs)[1])
     
@@ -505,12 +507,22 @@ grafica_Categorica_Grupos = function(eventos, x_variable, y_variable,
     scale_x_discrete(labels=xlabs)+theme_Publication(xangle = 0, xhjust = 0.5)
   if(! is.null(labels_diff_)){
     print(labels_diff_)
+    if(length(levels(factor(as.character(eventos[,groupby]))))!=2){
+      labels_diff_[,groupby] = factor(labels_diff_[,groupby] , levels = levels(factor(eventos[,groupby])))
+      labels_diff_ = labels_diff_%>%
+        left_join(maxs, by = c(x_variable,groupby))
+      graph = graph + geom_text(data=labels_diff_,
+                                aes(label = label ,
+                                    x = !!(sym(x_variable)),y=(maxs+0.5*sdval)), 
+                                hjust=0.5,show.legend = FALSE, position = position_dodge(width = 0.8))
+    }else{
+      
+      graph = graph + geom_text(data=labels_diff_,
+                                aes(label = label ,
+                                    x = !!(sym(x_variable)),y=(maxs$maxs+0.5*maxs$sdval)), 
+                                hjust=0.5,show.legend = FALSE, position = position_dodge(width = 0.8))
+    }
     
-    
-    graph = graph + geom_text(data=labels_diff_,
-                              aes(label = label ,
-                                  x = !!(sym(x_variable)),y=(maxs$maxs+0.5*maxs$sdval)), 
-                              hjust=0.5,show.legend = FALSE, position = position_dodge(width = 0.8))
     
     
   }

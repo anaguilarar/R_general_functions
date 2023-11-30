@@ -451,9 +451,9 @@ grafica_Categorica_Grupos = function(eventos, x_variable, y_variable,
       
       
     }else{
-      x_variable = 'feature'
-      df = eventos%>%
-        filter(feature == 'blue')%>%data.frame()
+      #x_variable = 'feature'
+      #df = eventos%>%
+      #  filter(feature == 'blue')%>%data.frame()
       eventos = eventos[!is.na(eventos[,x_variable]),]
       labels_diff_ = eventos%>%
         group_by(!!(sym(x_variable)))%>%

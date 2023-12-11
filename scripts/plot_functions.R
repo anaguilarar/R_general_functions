@@ -432,8 +432,7 @@ grafica_Categorica_Grupos = function(eventos, x_variable, y_variable,
                                      groupby = NULL,
                                      name_x_axes="",name_y_axes ="", 
                                      kruskal = T, xangle = 90, xhjust = 0,
-                                     
-                                     boxwidth = 1){
+                                     boxwidth = 1, textsposfactor = 0.5){
   
   labels_diff_ = NULL
   
@@ -513,13 +512,13 @@ grafica_Categorica_Grupos = function(eventos, x_variable, y_variable,
         left_join(maxs, by = c(x_variable,groupby))
       graph = graph + geom_text(data=labels_diff_,
                                 aes(label = label ,
-                                    x = !!(sym(x_variable)),y=(maxs+0.5*sdval)), 
+                                    x = !!(sym(x_variable)),y=(maxs+textsposfactor*sdval)), 
                                 hjust=0.5,show.legend = FALSE, position = position_dodge(width = 0.8))
     }else{
       
       graph = graph + geom_text(data=labels_diff_,
                                 aes(label = label ,
-                                    x = !!(sym(x_variable)),y=(maxs$maxs+0.5*maxs$sdval)), 
+                                    x = !!(sym(x_variable)),y=(maxs$maxs+textsposfactor*maxs$sdval)), 
                                 hjust=0.5,show.legend = FALSE, position = position_dodge(width = 0.8))
     }
     

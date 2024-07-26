@@ -339,7 +339,7 @@ corplotpaper = function(data,
     m = mplot %>% mutate(id = paste0(Var1, Var2)) %>% 
       left_join(ressig%>% 
                   mutate(id = paste0(Var1, Var2))%>%
-                  select(id,value,label), by = 'id') %>%
+                  dplyr::select(id,value,label), by = 'id') %>%
       mutate(label = str_replace(as.character(paste0(label,'\n')), 'NA', ''))
     
     newlabel = str_replace(paste0(m$label,as.numeric(testlabel)), 'NA', '')

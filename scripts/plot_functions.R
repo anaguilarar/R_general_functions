@@ -363,9 +363,14 @@ corplotpaper = function(data,
 
 
 
-get_signif_diff = function(df,y_variable,x_variable){
+get_signif_diff = function(df,y_variable,x_variable, test = 'wilcox'){
   map_signif_level <- c("****"=0.0001, "***"=0.001, "**"=0.01,  "*"=0.05,"ns" = 1)
-  m = wilcox.test(df[,y_variable]~factor(as.character(df[,x_variable])))
+  if(test == 'wilcox'){
+    m = wilcox.test(df[,y_variable]~factor(as.character(df[,x_variable])))  
+  }else if(test == 'ttest'){
+    m = t.test(df[,y_variable]~factor(as.character(df[,x_variable])))  
+  }
+  
 
   labalhyp = "****"
 
@@ -432,6 +437,7 @@ grafica_Categorica_Grupos = function(eventos, x_variable, y_variable,
                                      groupby = NULL,
                                      name_x_axes="",name_y_axes ="", 
                                      kruskal = T, xangle = 90, xhjust = 0,
+                                     test = 'wilcox',
                                      boxwidth = 1, textsposfactor = 0.5){
   
   labels_diff_ = NULL
@@ -443,7 +449,7 @@ grafica_Categorica_Grupos = function(eventos, x_variable, y_variable,
       
       labels_diff_ = eventos%>%
         group_by(!!(sym(x_variable)))%>%
-        group_modify(~ get_signif_diff(.x%>%data.frame(),y_variable,groupby))%>%
+        group_modify(~ get_signif_diff(.x%>%data.frame(),y_variable,groupby, test))%>%
         data.frame()%>%
         rename(!!groupby:= cluster)
       
